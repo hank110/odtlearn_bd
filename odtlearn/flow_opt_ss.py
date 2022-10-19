@@ -10,6 +10,7 @@ class FlowOPTSingleSink(OptimalPrescriptiveTree):
         time_limit,
         num_threads,
         verbose,
+        treatments_filter
     ) -> None:
         super().__init__(
             depth,
@@ -17,6 +18,8 @@ class FlowOPTSingleSink(OptimalPrescriptiveTree):
             num_threads,
             verbose,
         )
+
+        self.treatments_filter = treatments_filter
 
     def _tree_struc_variables(self):
         self._b = self._model.addVars(
@@ -75,10 +78,21 @@ class FlowOPTSingleSink(OptimalPrescriptiveTree):
         )
 
         # sum(w[n,k], k in treatments) = p[n]
-        self._model.addConstrs(
-            (quicksum(self._w[n, k] for k in self._treatments) == self._p[n])
-            for n in self._tree.Nodes + self._tree.Leaves
-        )
+        if self.treatments_filter:
+            print("Treatment filtered formulation used")
+            self._model.addConstrs(
+                (quicksum(self._w[n, k] for k in self._treatments if k not in self.treatments_filter) == self._p[n])
+                for n in self._tree.Nodes + self._tree.Leaves
+            )
+            self._model.addConstrs(
+                (quicksum(self._w[n, k] for k in self._treatments if k in self.treatments_filter) == 0)
+                for n in self._tree.Nodes + self._tree.Leaves
+            )
+        else:
+            self._model.addConstrs(
+                (quicksum(self._w[n, k] for k in self._treatments) == self._p[n])
+                for n in self._tree.Nodes + self._tree.Leaves
+            )
 
     def _flow_constraints(self):
         # z[i,n] = z[i,l(n)] + z[i,r(n)] + zeta[i,n]    forall i, n in Nodes

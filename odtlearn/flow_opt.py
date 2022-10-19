@@ -15,8 +15,8 @@ from odtlearn.utils.validation import (
 
 
 class BendersOPT_IPW(FlowOPTSingleSink):
-    def __init__(self, depth=1, time_limit=60, num_threads=None, verbose=False) -> None:
-        super().__init__(depth, time_limit, num_threads, verbose)
+    def __init__(self, depth=1, time_limit=60, num_threads=None, verbose=False, treatments_filter = None) -> None:
+        super().__init__(depth, time_limit, num_threads, verbose, treatments_filter)
 
         # The cuts we add in the callback function would be treated as lazy constraints
         self._model.params.LazyConstraints = 1
